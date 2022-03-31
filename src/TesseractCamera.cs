@@ -28,8 +28,6 @@ namespace Celeste.Mod.Tesseract {
             TesLevel = tesLevel;
 
             EffectLit = new BasicEffect(Engine.Graphics.GraphicsDevice);
-            EffectLit.EmissiveColor = new Vector3(0.8f, 0.8f, 0.8f);
-            EffectLit.Alpha = 1.0f;
 
             EffectPlayer = new BasicEffect(Engine.Graphics.GraphicsDevice);
             EffectPlayer.EmissiveColor = new Vector3(1f, 1f, 1f);
