@@ -1,0 +1,6 @@
+﻿- Name: Tesseract
+  Version: 0.0.1
+  DLL: bin/Tesseract.dll
+  Dependencies:
+    - Name: Everest
+      Version: 1.3164.0
