@@ -1,0 +1,2 @@
+☐ implement φ
+☐ implement zooming in/out
