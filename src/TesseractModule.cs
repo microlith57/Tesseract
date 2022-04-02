@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace Celeste.Mod.Tesseract {
+﻿namespace Celeste.Mod.Tesseract {
     public class TesseractModule : EverestModule {
         public static TesseractModule Instance;
 
@@ -20,6 +18,7 @@ namespace Celeste.Mod.Tesseract {
 
         public override void LoadContent(bool firstLoad) {
             Teapot.LoadData();
+            TesseractGameplayRenderer.LoadData();
         }
     }
 }

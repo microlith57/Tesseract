@@ -41,10 +41,16 @@ namespace Celeste.Mod.Tesseract {
             if (!level.FrozenOrPaused) {
                 var levelX = MathHelper.Lerp(level.Camera.Left, level.Camera.Right, 0.5f) - tesLevel.Position.X;
                 var levelY = tesLevel.Position.Y - MathHelper.Lerp(level.Camera.Bottom, level.Camera.Top, 0.5f);
+                var cosθ = (float)Math.Cos(Theta);
+                var sinθ = (float)Math.Cos(Theta);
 
-                FocusPoint.X = levelX * (float)Math.Cos(Theta);
+                if (cosθ == 1f || cosθ == -1f) {
+                    FocusPoint.X = levelX * cosθ;
+                } else if (sinθ == 1f || sinθ == -1f) {
+                    FocusPoint.Z = levelX * -sinθ;
+                }
+
                 FocusPoint.Y = levelY;
-                FocusPoint.Z = levelX * -(float)Math.Sin(Theta);
             }
             Position = Vector3.Transform(FocusPoint, Matrix.CreateTranslation(0f, 0f, Separation) * Matrix.CreateRotationY(Theta));
             UpdateMatrices();

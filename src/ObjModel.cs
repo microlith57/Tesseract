@@ -171,10 +171,12 @@ namespace Celeste.Mod.Tesseract {
                                 string[] subparts = parts[i].Split('/');
                                 if (subparts[0].Length > 0) {
                                     vert.Position = verts[int.Parse(subparts[0]) - 1];
-                                    if (normals.Count > 0) { vert.Normal = normals[int.Parse(subparts[0]) - 1]; }
                                 }
                                 if (subparts[1].Length > 0) {
                                     vert.TextureCoordinate = texcoords[int.Parse(subparts[1]) - 1];
+                                }
+                                if (subparts[2].Length > 0) {
+                                    vert.Normal = normals[int.Parse(subparts[2]) - 1];
                                 }
                                 vertices.Add(vert);
                             }

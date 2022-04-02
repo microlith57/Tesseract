@@ -10,17 +10,19 @@ namespace Celeste.Mod.Tesseract {
     public static class TesseractGameplayRenderer {
         public static bool Active => TesseractLevel.AnyActive;
         public static VirtualRenderTarget PlayerBuffer;
-
-        private static Quad playerQuad;
-        private static VertexDeclaration quadVertexDecl;
+        static ObjModel Quad;
+        private static bool DataLoaded = false;
 
         public static void Initialize() {
-            playerQuad = new Quad(Vector3.Zero, Vector3.Forward, Vector3.Up, TesseractCamera.Width, TesseractCamera.Height);
-            quadVertexDecl = new VertexDeclaration(new VertexElement[] {
-                new VertexElement(12 * 0, VertexElementFormat.Vector3, VertexElementUsage.Position, 0),
-                new VertexElement(12 * 1, VertexElementFormat.Vector3, VertexElementUsage.Normal, 0),
-                new VertexElement(12 * 2, VertexElementFormat.Vector2, VertexElementUsage.TextureCoordinate, 0)
-            });
+        }
+
+        public static void LoadData() {
+            if (!DataLoaded) {
+                if (Everest.Content.TryGet("Assets/quad", out var modAsset)) {
+                    Quad = ObjModel.CreateFromStream(modAsset.Stream, isExport: false);
+                    DataLoaded = true;
+                }
+            }
         }
 
         public static void Render(Scene scene) {
@@ -44,7 +46,7 @@ namespace Celeste.Mod.Tesseract {
                 if (entity is not TesseractEntity tesEntity) { continue; }
                 tesEntity.Render(scene, tesLevel);
             }
-            RenderPlayer(scene, tesLevel);
+            RenderQuad(scene, tesLevel);
 
             Draw.SpriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.PointWrap, DepthStencilState.None, RasterizerState.CullNone, null, level.Camera.Matrix);
             if (GameplayRenderer.RenderDebug || Engine.Commands.Open) {
@@ -53,27 +55,25 @@ namespace Celeste.Mod.Tesseract {
             Draw.SpriteBatch.End();
         }
 
-        public static void RenderPlayer(Scene scene, TesseractLevel tesLevel) {
+        public static void RenderQuad(Scene scene, TesseractLevel tesLevel) {
+            if (!DataLoaded) { return; }
+
             Engine.Instance.GraphicsDevice.RasterizerState = RasterizerState.CullNone;
             Engine.Instance.GraphicsDevice.BlendState = BlendState.AlphaBlend;
 
             var effect = tesLevel.Camera.EffectPlayer;
             effect.Projection = tesLevel.Camera.Projection;
             effect.View = tesLevel.Camera.View;
-            effect.World = Matrix.CreateConstrainedBillboard(tesLevel.Camera.FocusPoint,
+            effect.World = Matrix.CreateScale(TesseractCamera.Width, 1f, TesseractCamera.Height)
+                         * Matrix.CreateRotationX((float)Math.PI / 2f)
+                         * Matrix.CreateRotationZ((float)Math.PI)
+                         * Matrix.CreateConstrainedBillboard(tesLevel.Camera.FocusPoint,
                                                              tesLevel.Camera.Position,
                                                              Vector3.Up,
                                                              tesLevel.Camera.ForwardVector,
-                                                             playerQuad.Normal);
+                                                             Vector3.Up);
             effect.Texture = PlayerBuffer.Target;
-            foreach (EffectPass pass in effect.CurrentTechnique.Passes) {
-                pass.Apply();
-                Engine.Instance.GraphicsDevice.DrawUserIndexedPrimitives<VertexPositionNormalTexture>(PrimitiveType.TriangleList,
-                                                                                                      playerQuad.Vertices,
-                                                                                                      0, 4,
-                                                                                                      playerQuad.Indices,
-                                                                                                      0, 2);
-            }
+            Quad.Draw(effect);
         }
 
         public static void Load() {
