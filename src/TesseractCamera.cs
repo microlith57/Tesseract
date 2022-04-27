@@ -17,52 +17,59 @@ namespace Celeste.Mod.Tesseract {
         public float Theta = 0f;
         public Vector3 Position = default(Vector3);
         public Vector3 ForwardVector => Vector3.Normalize(Position - FocusPoint);
+        public bool Rotating = false;
+
+        public float Cosθ => (float)Math.Cos(Theta);
+        public float Sinθ => (float)Math.Sin(Theta);
 
         public Matrix Projection;
         public Matrix View;
 
         public BasicEffect EffectLit;
-        public BasicEffect EffectPlayer;
+        public BasicEffect EffectPlain;
 
         public TesseractCamera(TesseractLevel tesLevel) {
             TesLevel = tesLevel;
 
             EffectLit = new BasicEffect(Engine.Graphics.GraphicsDevice);
 
-            EffectPlayer = new BasicEffect(Engine.Graphics.GraphicsDevice);
-            EffectPlayer.EmissiveColor = new Vector3(1f, 1f, 1f);
-            EffectPlayer.Alpha = 1.0f;
-            EffectPlayer.TextureEnabled = true;
+            EffectPlain = new BasicEffect(Engine.Graphics.GraphicsDevice);
+            EffectPlain.EmissiveColor = new Vector3(1f, 1f, 1f);
+            EffectPlain.Alpha = 1.0f;
 
             UpdateMatrices();
         }
 
         public void Update(Level level, TesseractLevel tesLevel) {
-            if (!level.FrozenOrPaused) {
-                var levelX = MathHelper.Lerp(level.Camera.Left, level.Camera.Right, 0.5f) - tesLevel.Position.X;
-                var levelY = tesLevel.Position.Y - MathHelper.Lerp(level.Camera.Bottom, level.Camera.Top, 0.5f);
-                var cosθ = (float)Math.Cos(Theta);
-                var sinθ = (float)Math.Cos(Theta);
-
-                if (cosθ == 1f || cosθ == -1f) {
-                    FocusPoint.X = levelX * cosθ;
-                } else if (sinθ == 1f || sinθ == -1f) {
-                    FocusPoint.Z = levelX * -sinθ;
-                }
-
-                FocusPoint.Y = levelY;
+            var player = level.Tracker.GetEntity<Player>();
+            if (!Rotating && player != null) {
+                FocusPoint = Make3DWithDefaults(new Vector2(player.CenterX - tesLevel.Position.X,
+                                                            tesLevel.Position.Y - player.CenterY),
+                                                FocusPoint);
             }
             Position = Vector3.Transform(FocusPoint, Matrix.CreateTranslation(0f, 0f, Separation) * Matrix.CreateRotationY(Theta));
             UpdateMatrices();
         }
 
+        public Vector3 Make3DWithDefaults(Vector2 visual_pos, Vector3 defaults) {
+            var result = new Vector3(defaults.X, visual_pos.Y, defaults.Z);
+
+            if (Cosθ == 1f || Cosθ == -1f) {
+                FocusPoint.X = visual_pos.X * Cosθ;
+            } else if (Sinθ == 1f || Sinθ == -1f) {
+                FocusPoint.Z = visual_pos.X * -Sinθ;
+            }
+
+            return result;
+        }
+
         private void UpdateMatrices() {
             Projection = Matrix.CreateOrthographic(Width, Height, ClipNear, ClipFar);
             EffectLit.Projection = Projection;
-            EffectPlayer.Projection = Projection;
+            EffectPlain.Projection = Projection;
             View = Matrix.CreateLookAt(Position, FocusPoint, Vector3.Up);
             EffectLit.View = View;
-            EffectPlayer.View = View;
+            EffectPlain.View = View;
         }
     }
 }

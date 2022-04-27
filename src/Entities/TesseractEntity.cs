@@ -14,6 +14,9 @@ namespace Celeste.Mod.Tesseract {
         public TesseractEntity() : this(Vector3.Zero) {
         }
 
+        public virtual void BeforeRender(Scene scene, TesseractLevel tesLevel) {
+        }
+
         public virtual void Render(Scene scene, TesseractLevel tesLevel) {
         }
     }

@@ -1,0 +1,59 @@
+using System;
+using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
+using Monocle;
+
+namespace Celeste.Mod.Tesseract {
+    public class Billboard : TesseractEntity {
+        static ObjModel Model;
+        private static bool DataLoaded = false;
+        public float rotation = 0f;
+        public Texture2D Texture;
+        public float TexWidth, TexHeight;
+
+        public Billboard(Vector3 pos, Texture2D texture, float width, float height) : base(pos) {
+            Texture = texture;
+            TexWidth = width; TexHeight = height;
+        }
+
+        public override void Update() {
+            base.Update();
+            rotation += Engine.DeltaTime;
+        }
+
+        public static void LoadData() {
+            if (!DataLoaded) {
+                if (Everest.Content.TryGet("Assets/quad", out var modAsset)) {
+                    Model = ObjModel.CreateFromStream(modAsset.Stream, isExport: false);
+                    DataLoaded = true;
+                }
+            }
+        }
+
+        public void SetTexture(Texture2D texture, float width, float height) {
+            Texture = texture;
+            TexWidth = width; TexHeight = height;
+        }
+
+        public override void Render(Scene scene, TesseractLevel tesLevel) {
+            if (!DataLoaded || Texture == null || Texture.IsDisposed) { return; }
+
+            Engine.Instance.GraphicsDevice.RasterizerState = RasterizerState.CullNone;
+            Engine.Instance.GraphicsDevice.BlendState = BlendState.AlphaBlend;
+
+            var effect = tesLevel.Camera.EffectPlayer;
+            effect.Projection = tesLevel.Camera.Projection;
+            effect.View = tesLevel.Camera.View;
+            effect.World = Matrix.CreateScale(TexWidth, 1f, TexHeight)
+                         * Matrix.CreateRotationX((float)Math.PI / 2f)
+                         * Matrix.CreateRotationZ((float)Math.PI)
+                         * Matrix.CreateConstrainedBillboard(WorldPos,
+                                                             tesLevel.Camera.Position,
+                                                             Vector3.Up,
+                                                             tesLevel.Camera.ForwardVector,
+                                                             Vector3.Up);
+            effect.Texture = Texture;
+            Model.Draw(effect);
+        }
+    }
+}
